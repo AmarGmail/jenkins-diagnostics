@@ -1,9 +1,7 @@
 import jenkins.model.Jenkins
 node {
     try {
-    stage('Jenkins Controller') {
-
-        script {
+        stage('Jenkins Controller') {
 
             def j = Jenkins.instance
 
@@ -29,8 +27,7 @@ node {
 
             echo "======================================="
         }
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
         currentBuild.Result = 'FAILURE'
         thow e
     }
