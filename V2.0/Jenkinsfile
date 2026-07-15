@@ -4,32 +4,35 @@ node {
         stage('Jenkins Controller') {
 
             def j = Jenkins.instance
+            def report = new StringBuffer()
 
-            echo "======================================="
-            echo "JENKINS CONTROLLER"
-            echo "======================================="
+            report << "======================================="
+            report << "JENKINS CONTROLLER"
+            report << "======================================="
 
-            echo "Version          : ${Jenkins.VERSION}"
-            echo "Root URL         : ${j.rootUrl}"
-            echo "Home             : ${j.rootDir}"
-            echo "System Message   : ${j.systemMessage ?: 'Not Configured'}"
+            report << "Version          : ${Jenkins.VERSION}"
+            report << "Root URL         : ${j.rootUrl}"
+            report << "Home             : ${j.rootDir}"
+            report << "System Message   : ${j.systemMessage ?: 'Not Configured'}"
 
-            echo ""
+            report << ""
 
-            echo "Jobs             : ${j.items.size()}"
-            echo "Nodes            : ${j.nodes.size()}"
-            echo "Executors        : ${j.numExecutors}"
+            report << "Jobs             : ${j.items.size()}"
+            report << "Nodes            : ${j.nodes.size()}"
+            report << "Executors        : ${j.numExecutors}"
 
-            echo ""
+            report << ""
 
-            echo "Quiet Mode       : ${j.isQuietingDown()}"
-            echo "Agent Port       : ${j.slaveAgentPort}"
+            report << "Quiet Mode       : ${j.isQuietingDown()}"
+            report << "Agent Port       : ${j.slaveAgentPort}"
 
-            echo "======================================="
+            report << "======================================="
+
+            println report.toString()
         }
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
-        thow e
+        throw e
     }
     finally {
         echo "Pipeline completed: ${currentBuild.result ?: 'SUCCESS'}"
