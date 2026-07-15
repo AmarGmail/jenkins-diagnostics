@@ -1,3 +1,7 @@
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.CredentialsProvider
+import com.cloudbees.plugins.credentials.common.StandardCredentials
+
 pipeline {
     agent any
 
@@ -83,7 +87,7 @@ pipeline {
                         echo "CONFIGURED CREDENTIALS"
                         echo "=================================================="
 
-                        import com.cloudbees.plugins.credentials.*
+                        
 
                         def creds = CredentialsProvider.lookupCredentials(
                                 com.cloudbees.plugins.credentials.common.StandardCredentials.class,

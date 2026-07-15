@@ -1,0 +1,135 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Tool Health Check') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "CI/CD TOOL HEALTH CHECK"
+                echo "=================================================="
+
+                check() {
+
+                    TOOL=$1
+
+                    if command -v "$TOOL" >/dev/null 2>&1
+                    then
+                        printf "%-20s : PASS\n" "$TOOL"
+                    else
+                        printf "%-20s : FAIL\n" "$TOOL"
+                    fi
+                }
+
+                check git
+                check java
+                check python3
+                check pip3
+                check docker
+                check kubectl
+                check terraform
+                check ansible
+                check mvn
+                check gradle
+                check node
+                check npm
+                '''
+            }
+        }
+        stage('Internet Readiness') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "INTERNET READINESS"
+                echo "=================================================="
+
+                check_site() {
+
+                    SITE=$1
+
+                    if curl -Is --max-time 5 "$SITE" >/dev/null
+                    then
+                        printf "%-30s : PASS\n" "$SITE"
+                    else
+                        printf "%-30s : FAIL\n" "$SITE"
+                    fi
+                }
+
+                check_site https://github.com
+                check_site https://api.github.com
+                check_site https://pypi.org
+                check_site https://registry.npmjs.org
+                '''
+            }
+        }
+        stage('Workspace Health') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "WORKSPACE HEALTH"
+                echo "=================================================="
+
+                SIZE=$(du -sm . | cut -f1)
+
+                echo "Workspace Size : ${SIZE} MB"
+
+                if [ "$SIZE" -lt 500 ]
+                then
+                    echo "Workspace Status : PASS"
+                else
+                    echo "Workspace Status : WARNING"
+                fi
+                '''
+            }
+        }
+        stage('Disk Health') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "DISK HEALTH"
+                echo "=================================================="
+
+                USED=$(df . --output=pcent | tail -1 | tr -dc '0-9')
+
+                echo "Disk Usage : ${USED}%"
+
+                if [ "$USED" -lt 80 ]
+                then
+                    echo "Disk Status : PASS"
+                else
+                    echo "Disk Status : WARNING"
+                fi
+                '''
+            }
+        }
+        stage('Memory Health') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "MEMORY HEALTH"
+                echo "=================================================="
+
+                free -h
+                '''
+            }
+        }
+        stage('Agent Summary') {
+            steps {
+                script {
+
+                    echo "=================================================="
+                    echo "AGENT SUMMARY"
+                    echo "=================================================="
+
+                    echo "Node Name : ${env.NODE_NAME}"
+                    echo "Workspace : ${env.WORKSPACE}"
+                    echo "Job Name  : ${env.JOB_NAME}"
+                    echo "Build No  : ${env.BUILD_NUMBER}"
+
+                    echo "=================================================="
+                }
+            }
+        }
+        
+    }
+}
