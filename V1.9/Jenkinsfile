@@ -1,0 +1,113 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Start Timer') {
+            steps {
+                script {
+                    env.START_TIME = System.currentTimeMillis().toString()
+                }
+            }
+        }
+
+        stage('Build Statistics') {
+            steps {
+                script {
+                    long elapsed = System.currentTimeMillis() - env.START_TIME.toLong()
+
+                    env.ELAPSED_SEC = String.format("%.2f", elapsed / 1000.0)
+
+                    echo "Build Duration : ${env.ELAPSED_SEC} seconds"
+                }
+            }
+        }
+
+        stage('Executive Summary') {
+            steps {
+                script {
+
+                    def summary = """
+                    ==========================================
+                        JENKINS DIAGNOSTICS SUMMARY
+                    ==========================================
+
+                    Job Name       : ${env.JOB_NAME}
+                    Build Number   : ${env.BUILD_NUMBER}
+                    Build Result   : ${currentBuild.currentResult}
+
+                    Node           : ${env.NODE_NAME}
+                    Workspace      : ${env.WORKSPACE}
+
+                    Build URL
+                    ${env.BUILD_URL}
+
+                    Duration
+                    ${env.ELAPSED_SEC} seconds
+
+                    ==========================================
+                    """
+
+                    echo summary
+
+                    writeFile file: "summary.txt", text: summary
+                }
+            }
+        }
+
+        stage('Archive Reports') {
+            steps {
+
+                archiveArtifacts(
+                    artifacts: '*.md,*.html,summary.txt',
+                    fingerprint: true
+                )
+
+            }
+        }
+
+        stage('Final Workspace Snapshot') {
+            steps {
+                sh '''
+                echo "===== Workspace ====="
+
+                pwd
+
+                echo
+
+                ls -lh
+
+                echo
+
+                du -sh .
+                '''
+            }
+        }
+
+        stage('Git Information') {
+            steps {
+                sh '''
+                if [ -d .git ]
+                then
+                    echo "Repository"
+
+                    git remote -v
+
+                    echo
+
+                    echo "Branch"
+
+                    git branch --show-current
+
+                    echo
+
+                    echo "Latest Commit"
+
+                    git log -1 --oneline
+                else
+                    echo "No Git repository present."
+                fi
+                '''
+            }
+        }
+    }
+}
