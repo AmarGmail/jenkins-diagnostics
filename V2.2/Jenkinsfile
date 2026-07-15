@@ -21,9 +21,9 @@ String buildNodeReport() {
     report << "nodeName               : ${j.nodeName}\n\n"
     report << "Computer Class         : ${computer.class.name}\n"
     report << "Computer Name          : ${computer.name}\n"
-    report << "Computer online?       : ${computer.isOnline()}"
-    report << "Computer offline?      : ${computer.isOffline()}"
-    report << "Computer Ideal?        : ${computer.isIdle()}"
+    report << "Computer online?       : ${computer.isOnline()}\n"
+    report << "Computer offline?      : ${computer.isOffline()}\n"
+    report << "Computer Ideal?        : ${computer.isIdle()}\n"
 
     return report.toString()
 }
