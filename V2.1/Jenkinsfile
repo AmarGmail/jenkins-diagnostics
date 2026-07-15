@@ -1,64 +1,76 @@
 import jenkins.model.Jenkins
 import hudson.model.Job
 
+@NonCPS
+String buildJobInventoryReport() {
+                
+    def j = Jenkins.get()
+    def report = new StringBuilder()
+
+    
+        report << "\n"
+        report << "==============================================\n"
+        report << "           JENKINS JOB INVENTORY\n"
+        report << "==============================================\n\n"
+
+        report << String.format(
+            "%-35s %-15s %-10s %-10s\n",
+            "JOB",
+            "TYPE",
+            "ENABLED",
+            "LAST BUILD"
+        )
+
+        report << ("-" * 75) + "\n"
+
+
+
+
+
+        def allJobs = j.allItems(Job.class)
+
+        allJobs.each { job ->
+
+            def type = job.class.simpleName
+            def enabled = job.getBuildable() ? "YES" : "NO"
+            def lastBuild = job.lastBuild ?
+                    "#${job.lastBuild.number}" :
+                    "Never"
+
+            report << String.format(
+                "%-35s %-15s %-10s %-10s\n",
+                job.fullName,
+                type,
+                enabled,
+                lastBuild
+            )
+        }
+
+        report << "\n"
+        report << "Total Jobs : ${allJobs.size()}\n"
+        //println report.toString()
+
+    return report.toString()
+}
+
 node {
     try {
 
         stage('Job Inventory') {
-
-            script {
-
-                def j = Jenkins.instance
-                def report = new StringBuilder()
-
-                report << "\n"
-                report << "==============================================\n"
-                report << "           JENKINS JOB INVENTORY\n"
-                report << "==============================================\n\n"
-
-                report << String.format(
-                    "%-35s %-15s %-10s %-10s\n",
-                    "JOB",
-                    "TYPE",
-                    "ENABLED",
-                    "LAST BUILD"
-                )
-
-                report << ("-" * 75) + "\n"
-
-                j.allItems(Job.class).each { job ->
-
-                    def type = job.class.simpleName
-                    def enabled = job.isBuildable() ? "YES" : "NO"
-                    def lastBuild = job.lastBuild ?
-                            "#${job.lastBuild.number}" :
-                            "Never"
-
-                    report << String.format(
-                        "%-35s %-15s %-10s %-10s\n",
-                        job.fullName,
-                        type,
-                        enabled,
-                        lastBuild
-                    )
-
-                }
-
-                report << "\n"
-                report << "Total Jobs : ${j.allItems(Job.class).size()}\n"
-                println report.toString()
-
-                writeFile file: "job_inventory.txt",
-                        text: report.toString()
-
-                archiveArtifacts artifacts: "job_inventory.txt"
-            }
-        }
+            def report = buildJobInventoryReport()
+            println report
+            writeFile file: 'report.txt', text: report
+            archiveArtifacts (
+                artifacts: 'report.txt',
+                onlyIfSuccessful: true
+            )
+        }        
 
     } catch (Exception e){
         currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
         throw e
     } finally {
-        echo "Pipeline completed : ${currentBuild.result}"
+        echo "Pipeline completed : ${currentBuild.currentResult}"
     }
 }
