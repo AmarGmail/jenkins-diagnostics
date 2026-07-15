@@ -1,0 +1,64 @@
+import jenkins.model.jenkins
+import hudson.model.Job
+
+node {
+    try {
+
+        stage('Job Inventory') {
+
+            script {
+
+                def j = Jenkins.instance
+                def report = new StringBuilder()
+
+                report << "\n"
+                report << "==============================================\n"
+                report << "           JENKINS JOB INVENTORY\n"
+                report << "==============================================\n\n"
+
+                report << String.format(
+                    "%-35s %-15s %-10s %-10s\n",
+                    "JOB",
+                    "TYPE",
+                    "ENABLED",
+                    "LAST BUILD"
+                )
+
+                report << ("-" * 75) + "\n"
+
+                j.allItems(Job.class).each { job ->
+
+                    def type = job.class.simpleName
+                    def enabled = job.isBuildable() ? "YES" : "NO"
+                    def lastBuild = job.lastBuild ?
+                            "#${job.lastBuild.number}" :
+                            "Never"
+
+                    report << String.format(
+                        "%-35s %-15s %-10s %-10s\n",
+                        job.fullName,
+                        type,
+                        enabled,
+                        lastBuild
+                    )
+
+                }
+
+                report << "\n"
+                report << "Total Jobs : ${j.allItems(Job.class).size()}\n"
+                println report.toString()
+
+                writeFile file: "job_inventory.txt",
+                        text: report.toString()
+
+                archiveArtifacts artifacts: "job_inventory.txt"
+            }
+        }
+
+    } catch (Exception e){
+        currentBuild.result = "FAILURE"
+        throw e
+    } finally {
+        echo "Pipeline completed : ${currentBuild.result}"
+    }
+}
