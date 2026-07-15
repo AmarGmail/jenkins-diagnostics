@@ -1,0 +1,143 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Jenkins Information') {
+            steps {
+                script {
+                    def j = jenkins.model.Jenkins.instance
+
+                    echo "=================================================="
+                    echo "JENKINS INFORMATION"
+                    echo "=================================================="
+
+                    echo "Jenkins Version : ${Jenkins.VERSION}"
+                    echo "Root URL        : ${j.getRootUrl()}"
+                    echo "Home Directory  : ${j.getRootDir()}"
+                    echo "Number of Nodes : ${j.nodes.size() + 1}"
+                    echo "Executors       : ${j.numExecutors}"
+
+                    echo "=================================================="
+                }
+            }
+        }
+        stage('Build Information') {
+            steps {
+                script {
+
+                    echo "=================================================="
+                    echo "BUILD INFORMATION"
+                    echo "=================================================="
+
+                    echo "Job Name        : ${env.JOB_NAME}"
+                    echo "Build Number    : ${env.BUILD_NUMBER}"
+                    echo "Build URL       : ${env.BUILD_URL}"
+                    echo "Node            : ${env.NODE_NAME}"
+                    echo "Executor        : ${env.EXECUTOR_NUMBER}"
+
+                    echo "=================================================="
+                }
+            }
+        }
+        stage('Build Cause') {
+            steps {
+                script {
+
+                    echo "=================================================="
+                    echo "BUILD TRIGGER"
+                    echo "=================================================="
+
+                    currentBuild.rawBuild.getCauses().each {
+
+                        echo "${it.getShortDescription()}"
+
+                    }
+
+                    echo "=================================================="
+                }
+            }
+        }
+        stage('Node Information') {
+                steps {
+                    script {
+
+                        echo "=================================================="
+                        echo "NODE INFORMATION"
+                        echo "=================================================="
+
+                        def node = Jenkins.instance.getNode(env.NODE_NAME)
+                        if (node != null) {
+
+                            echo "Node Name : ${node.displayName}"
+                            echo "Labels    : ${node.labelString}"
+                            echo "Executors : ${node.numExecutors}"
+                        }
+                    }
+                }
+        }
+        stage('Credentials') {
+                steps {
+                    script {
+
+                        echo "=================================================="
+                        echo "CONFIGURED CREDENTIALS"
+                        echo "=================================================="
+
+                        import com.cloudbees.plugins.credentials.*
+
+                        def creds = CredentialsProvider.lookupCredentials(
+                                com.cloudbees.plugins.credentials.common.StandardCredentials.class,
+                                Jenkins.instance,
+                                null,
+                                null
+                        )
+
+                        creds.each {
+
+                            echo "${it.id} (${it.class.simpleName})"
+
+                        }
+
+                        echo "=================================================="
+                    }
+                }
+        }
+        stage('Installed Plugins') {
+            steps {
+                script {
+
+                    echo "=================================================="
+                    echo "INSTALLED PLUGINS"
+                    echo "=================================================="
+
+                    Jenkins.instance.pluginManager.plugins
+                            .sort { it.shortName }
+                            .each {
+
+                        echo "${it.shortName} : ${it.version}"
+
+                    }
+                }
+            }
+        }
+        stage('Environment Variables') {
+            steps {
+                script {
+
+                    echo "=================================================="
+                    echo "ENVIRONMENT VARIABLES"
+                    echo "=================================================="
+
+                    env.getEnvironment().sort().each {
+
+                        echo "${it.key} = ${it.value}"
+
+                    }
+
+                }
+            }
+        }
+
+        
+    }
+}

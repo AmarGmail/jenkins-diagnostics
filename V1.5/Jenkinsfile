@@ -29,8 +29,7 @@ pipeline {
                     echo "=================================================="
                     '''
                 }
-            }
-        
+            }   
             stage('Directory Structure') {
                 steps {
                     sh '''
@@ -157,5 +156,5 @@ pipeline {
                     '''
                 }
             }
-    }
+        }
 }
