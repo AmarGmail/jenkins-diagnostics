@@ -1,0 +1,126 @@
+pipeline{
+    agent any
+
+        stages{
+            stage('System Diagnostics') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "SYSTEM DIAGNOSTICS"
+                    echo "=================================================="
+
+                    echo
+                    echo "Hostname"
+                    hostname
+
+                    echo
+                    echo "Current User"
+                    whoami
+
+                    echo
+                    echo "Operating System"
+                    cat /etc/os-release
+
+                    echo
+                    echo "Kernel"
+                    uname -r
+
+                    echo
+                    echo "Architecture"
+                    uname -m
+
+                    echo
+                    echo "Uptime"
+                    uptime
+
+                    echo
+                    echo "Current Date"
+                    date
+
+                    echo
+                    echo "=================================================="
+                    '''
+                }
+            }
+            stage('CPU Information') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "CPU INFORMATION"
+                    echo "=================================================="
+
+                    lscpu
+
+                    echo
+                    echo "Number of processors"
+                    nproc
+                    '''
+                }
+            }
+            stage('Memory Information') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "MEMORY INFORMATION"
+                    echo "=================================================="
+
+                    free -h
+
+                    echo
+                    cat /proc/meminfo | head
+                    '''
+                }
+            }
+            stage('Disk Information') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "DISK INFORMATION"
+                    echo "=================================================="
+
+                    df -h
+
+                    echo
+                    echo "Workspace Size"
+
+                    du -sh .
+
+                    echo
+                    echo "Mounted File Systems"
+
+                    lsblk
+                    '''
+                }
+            }
+            stage('Running Processes') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "TOP PROCESSES"
+                    echo "=================================================="
+
+                    ps -ef | head -20
+                    '''
+                }
+            }
+            stage('Network Information') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "NETWORK"
+                    echo "=================================================="
+
+                    hostname -I
+
+                    echo
+
+                    ip route
+
+                    echo
+
+                    cat /etc/resolv.conf
+                    '''
+                }
+            }
+        }
+}
