@@ -28,11 +28,11 @@ node {
             echo "======================================="
         }
     } catch (Exception e) {
-        currentBuild.Result = 'FAILURE'
+        currentBuild.result = 'FAILURE'
         thow e
     }
     finally {
-        echo "Pipeline completed: ${currentBuild.Result ?: 'SUCCESS'}"
+        echo "Pipeline completed: ${currentBuild.result ?: 'SUCCESS'}"
     }
 
 }
