@@ -30,31 +30,31 @@ pipeline {
                     '''
                 }
             }
-        }
-        stage('Directory Structure') {
-            steps {
-                sh '''
-                echo "=================================================="
-                echo "DIRECTORY STRUCTURE"
-                echo "=================================================="
+        
+            stage('Directory Structure') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "DIRECTORY STRUCTURE"
+                    echo "=================================================="
 
-                echo
-                echo "Top Level Files"
-                ls -lah
+                    echo
+                    echo "Top Level Files"
+                    ls -lah
 
-                echo
-                echo "Directory Tree (Depth 2)"
+                    echo
+                    echo "Directory Tree (Depth 2)"
 
-                if command -v tree >/dev/null
-                then
-                    tree -L 2
-                else
-                    find . -maxdepth 2
-                fi
-                '''
+                    if command -v tree >/dev/null
+                    then
+                        tree -L 2
+                    else
+                        find . -maxdepth 2
+                    fi
+                    '''
+                }
             }
-        }
-        stage('Largest Files') {
+            stage('Largest Files') {
             steps {
                 sh '''
                 echo "=================================================="
@@ -66,95 +66,96 @@ pipeline {
                     | head -10
                 '''
             }
-        }
-        stage('Workspace Statistics') {
-            steps {
-                sh '''
-                echo "=================================================="
-                echo "WORKSPACE STATISTICS"
-                echo "=================================================="
-
-                echo
-                echo "Total Files"
-                find . -type f | wc -l
-
-                echo
-                echo "Total Directories"
-                find . -type d | wc -l
-
-                echo
-                echo "Hidden Files"
-                find . -name ".*" | head -20
-                '''
             }
-        }        
-        stage('Recent Files') {
-            steps {
-                sh '''
-                echo "=================================================="
-                echo "RECENT FILES"
-                echo "=================================================="
+            stage('Workspace Statistics') {
+                    steps {
+                        sh '''
+                        echo "=================================================="
+                        echo "WORKSPACE STATISTICS"
+                        echo "=================================================="
 
-                find . -type f \
-                    -printf "%TY-%Tm-%Td %TH:%TM %p\n" \
-                    | sort -r \
-                    | head -20
-                '''
+                        echo
+                        echo "Total Files"
+                        find . -type f | wc -l
+
+                        echo
+                        echo "Total Directories"
+                        find . -type d | wc -l
+
+                        echo
+                        echo "Hidden Files"
+                        find . -name ".*" | head -20
+                        '''
+                    }
+            }        
+            stage('Recent Files') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "RECENT FILES"
+                    echo "=================================================="
+
+                    find . -type f \
+                        -printf "%TY-%Tm-%Td %TH:%TM %p\n" \
+                        | sort -r \
+                        | head -20
+                    '''
+                }
             }
-        }
-        stage('Permissions') {
-            steps {
-                sh '''
-                echo "=================================================="
-                echo "PERMISSIONS"
-                echo "=================================================="
+            stage('Permissions') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "PERMISSIONS"
+                    echo "=================================================="
 
-                ls -lah
+                    ls -lah
 
-                echo
-                echo "Workspace Owner"
+                    echo
+                    echo "Workspace Owner"
 
-                stat .
-                '''
+                    stat .
+                    '''
+                }
             }
-        }
-        stage('Temporary Files') {
-            steps {
-                sh '''
-                echo "=================================================="
-                echo "TEMPORARY FILES"
-                echo "=================================================="
+            stage('Temporary Files') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "TEMPORARY FILES"
+                    echo "=================================================="
 
-                find . \\(
-                    -name "*.tmp" -o \
-                    -name "*.temp" -o \
-                    -name "*.bak" -o \
-                    -name "*.swp" -o \
-                    -name "*~"
-                \\)
-                '''
+                    find . \\(
+                        -name "*.tmp" -o \
+                        -name "*.temp" -o \
+                        -name "*.bak" -o \
+                        -name "*.swp" -o \
+                        -name "*~"
+                    \\)
+                    '''
+                }
             }
-        }
-        stage('Cleanup Recommendation') {
-            steps {
-                sh '''
-                echo "=================================================="
-                echo "CLEANUP RECOMMENDATION"
-                echo "=================================================="
+            stage('Cleanup Recommendation') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "CLEANUP RECOMMENDATION"
+                    echo "=================================================="
 
-                [ -d .git ] && echo "✓ Git repository present"
+                    [ -d .git ] && echo "✓ Git repository present"
 
-                [ -d venv ] && echo "✓ Python virtual environment present"
+                    [ -d venv ] && echo "✓ Python virtual environment present"
 
-                [ -d node_modules ] && echo "✓ node_modules present"
+                    [ -d node_modules ] && echo "✓ node_modules present"
 
-                [ -d target ] && echo "✓ Maven target directory present"
+                    [ -d target ] && echo "✓ Maven target directory present"
 
-                [ -d build ] && echo "✓ Gradle build directory present"
+                    [ -d build ] && echo "✓ Gradle build directory present"
 
-                echo
-                echo "Review whether these directories should be retained or cleaned."
-                '''
+                    echo
+                    echo "Review whether these directories should be retained or cleaned."
+                    '''
+                }
             }
-        }
+    }
 }
