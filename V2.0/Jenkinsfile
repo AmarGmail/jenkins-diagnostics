@@ -1,0 +1,41 @@
+import jenkins.model.Jenkins
+node {
+    try {
+    stage('Jenkins Controller') {
+
+        script {
+
+            def j = Jenkins.instance
+
+            echo "======================================="
+            echo "JENKINS CONTROLLER"
+            echo "======================================="
+
+            echo "Version          : ${Jenkins.VERSION}"
+            echo "Root URL         : ${j.rootUrl}"
+            echo "Home             : ${j.rootDir}"
+            echo "System Message   : ${j.systemMessage ?: 'Not Configured'}"
+
+            echo ""
+
+            echo "Jobs             : ${j.items.size()}"
+            echo "Nodes            : ${j.nodes.size()}"
+            echo "Executors        : ${j.numExecutors}"
+
+            echo ""
+
+            echo "Quiet Mode       : ${j.isQuietingDown()}"
+            echo "Agent Port       : ${j.slaveAgentPort}"
+
+            echo "======================================="
+        }
+    }
+    catch (Exception e) {
+        currentBuild.Result = 'FAILURE'
+        thow e
+    }
+    finally {
+        echo "Pipeline completed: ${currentBuild.Result ?: 'SUCCESS'}"
+    }
+
+}
