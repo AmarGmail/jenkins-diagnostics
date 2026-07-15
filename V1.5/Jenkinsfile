@@ -1,0 +1,160 @@
+pipeline {
+    agent any
+
+        stages {
+            stage('Workspace Information') {
+                steps {
+                    sh '''
+                    echo "=================================================="
+                    echo "WORKSPACE INFORMATION"
+                    echo "=================================================="
+
+                    echo
+                    echo "Workspace"
+                    pwd
+
+                    echo
+                    echo "Workspace Environment Variable"
+                    echo "$WORKSPACE"
+
+                    echo
+                    echo "Workspace Size"
+                    du -sh .
+
+                    echo
+                    echo "Filesystem Usage"
+                    df -h .
+
+                    echo
+                    echo "=================================================="
+                    '''
+                }
+            }
+        }
+        stage('Directory Structure') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "DIRECTORY STRUCTURE"
+                echo "=================================================="
+
+                echo
+                echo "Top Level Files"
+                ls -lah
+
+                echo
+                echo "Directory Tree (Depth 2)"
+
+                if command -v tree >/dev/null
+                then
+                    tree -L 2
+                else
+                    find . -maxdepth 2
+                fi
+                '''
+            }
+        }
+        stage('Largest Files') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "LARGEST FILES"
+                echo "=================================================="
+
+                find . -type f -exec du -h {} + \
+                    | sort -hr \
+                    | head -10
+                '''
+            }
+        }
+        stage('Workspace Statistics') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "WORKSPACE STATISTICS"
+                echo "=================================================="
+
+                echo
+                echo "Total Files"
+                find . -type f | wc -l
+
+                echo
+                echo "Total Directories"
+                find . -type d | wc -l
+
+                echo
+                echo "Hidden Files"
+                find . -name ".*" | head -20
+                '''
+            }
+        }        
+        stage('Recent Files') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "RECENT FILES"
+                echo "=================================================="
+
+                find . -type f \
+                    -printf "%TY-%Tm-%Td %TH:%TM %p\n" \
+                    | sort -r \
+                    | head -20
+                '''
+            }
+        }
+        stage('Permissions') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "PERMISSIONS"
+                echo "=================================================="
+
+                ls -lah
+
+                echo
+                echo "Workspace Owner"
+
+                stat .
+                '''
+            }
+        }
+        stage('Temporary Files') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "TEMPORARY FILES"
+                echo "=================================================="
+
+                find . \\(
+                    -name "*.tmp" -o \
+                    -name "*.temp" -o \
+                    -name "*.bak" -o \
+                    -name "*.swp" -o \
+                    -name "*~"
+                \\)
+                '''
+            }
+        }
+        stage('Cleanup Recommendation') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "CLEANUP RECOMMENDATION"
+                echo "=================================================="
+
+                [ -d .git ] && echo "✓ Git repository present"
+
+                [ -d venv ] && echo "✓ Python virtual environment present"
+
+                [ -d node_modules ] && echo "✓ node_modules present"
+
+                [ -d target ] && echo "✓ Maven target directory present"
+
+                [ -d build ] && echo "✓ Gradle build directory present"
+
+                echo
+                echo "Review whether these directories should be retained or cleaned."
+                '''
+            }
+        }
+}
