@@ -1,0 +1,76 @@
+import jenkins.model.Jenkins
+
+/*
+ * Uses Jenkins internal APIs.
+ * May require Script Approval.
+ */
+
+@NonCPS
+String buildNodeReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+    def computer = j.toComputer()
+
+    report << "-------------------------------------\n"
+    report << "JENKINS NODE DIAGNOSTICS\n"
+    report << "-------------------------------------\n"
+
+    j.getNodes().each { node ->
+        report << "Name : ${node.displayName}\n"
+        report << "Class: ${node.class.name}\n"
+    }
+    report << "Jenkins Class          : ${j.class.name}\n\n"
+    report << "Jenkins Controller     : ${j}\n"
+    report << "Total configured nodes : ${j.getNodes().size()}\n"
+    report << "displayName            : ${j.displayName}\n"
+    report << "nodeName               : ${j.nodeName}\n\n"
+    report << "Computer Class         : ${computer.class.name}\n"
+    report << "Computer Name          : ${computer.name}\n"
+    report << "Computer online?       : ${computer.isOnline()}\n"
+    report << "Computer offline?      : ${computer.isOffline()}\n"
+    report << "Computer Idle?        : ${computer.isIdle()}\n"
+
+    return report.toString()
+}
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Node Diagnostics') {
+            steps {
+                script {
+                    String report = buildNodeReport()
+                    println report
+
+                    writeFile(
+                        file: 'jenkins-node-report.txt',
+                        text: report
+                    )
+
+                    archiveArtifacts(
+                        artifacts: 'jenkins-node-report.txt'
+                    )
+                }
+            }            
+        }
+    } post {
+        failure {
+            echo "Build Failed"
+        }
+        success {
+            echo "Success block"
+        }
+        unstable {
+            echo "unstable block"
+        }
+        always {
+            echo "Pipeline Completed : ${currentBuild.currentResult}"
+        }
+    }
+
+}
+
+
+ 
