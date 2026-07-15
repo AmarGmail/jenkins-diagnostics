@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+        stages {
+            stage('SCM Diagnostics') {
+                steps {
+                    script {
+
+                        echo "=================================================="
+                        echo "              SCM DIAGNOSTICS"
+                        echo "=================================================="
+
+                        def scmVars = checkout scm
+
+                        echo ""
+                        echo "SCM Variables Returned by checkout scm"
+                        echo "---------------------------------------"
+
+                        scmVars.each { key, value ->
+                            echo "${key} = ${value}"
+                        }
+
+                        echo "=================================================="
+                    }
+
+                    sh '''
+                    echo
+                    echo "========== Git Version =========="
+                    git --version
+
+                    echo
+                    echo "========== Repository =========="
+                    git config --get remote.origin.url
+
+                    echo
+                    echo "========== Current Branch =========="
+                    git branch --show-current
+
+                    echo
+                    echo "========== Current Commit =========="
+                    git rev-parse HEAD
+
+                    echo
+                    echo "========== Short Commit =========="
+                    git rev-parse --short HEAD
+
+                    echo
+                    echo "========== Last Commit =========="
+                    git log -1
+
+                    echo
+                    echo "========== Last 5 Commits =========="
+                    git log --oneline -5
+
+                    echo
+                    echo "========== Git Status =========="
+                    git status
+
+                    echo
+                    echo "========== Git Remotes =========="
+                    git remote -v
+
+                    echo
+                    echo "========== Git Configuration =========="
+                    git config --list
+
+                    echo
+                    echo "========== Branch Details =========="
+                    git branch -vv
+                    '''
+                }
+            }
+        }
+}
