@@ -8,7 +8,7 @@ node {
 
             report << "=======================================\n"
             report << "JENKINS CONTROLLER\n"
-            report << "=======================================\nn"
+            report << "=======================================\n\n"
 
             report << "Version          : ${Jenkins.VERSION}\n"
             report << "Root URL         : ${j.rootUrl}\n"
