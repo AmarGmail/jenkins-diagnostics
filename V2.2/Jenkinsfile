@@ -1,14 +1,20 @@
 import jenkins.model.Jenkins
 
+/*
+ * Uses Jenkins internal APIs.
+ * May require Script Approval.
+ */
+
 @NonCPS
 String buildNodeReport() {
 
-    def j = Jenkins.get()
-    def report = new StringBuilder()
-    def computer = Jenkins.get().toComputer()
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+    def computer = j.toComputer()
 
-    report << "Configured Nodes\n"
-    report << "----------------\n"
+    report << "-------------------------------------\n"
+    report << "JENKINS NODE DIAGNOSTICS\n"
+    report << "-------------------------------------\n"
 
     j.getNodes().each { node ->
         report << "Name : ${node.displayName}\n"
@@ -23,7 +29,7 @@ String buildNodeReport() {
     report << "Computer Name          : ${computer.name}\n"
     report << "Computer online?       : ${computer.isOnline()}\n"
     report << "Computer offline?      : ${computer.isOffline()}\n"
-    report << "Computer Ideal?        : ${computer.isIdle()}\n"
+    report << "Computer Idle?        : ${computer.isIdle()}\n"
 
     return report.toString()
 }
