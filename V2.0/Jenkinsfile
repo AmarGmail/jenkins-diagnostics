@@ -6,25 +6,25 @@ node {
             def j = Jenkins.instance
             def report = new StringBuffer()
 
-            report << "======================================="
-            report << "JENKINS CONTROLLER"
-            report << "======================================="
+            report << "=======================================\n"
+            report << "JENKINS CONTROLLER\n"
+            report << "=======================================\nn"
 
-            report << "Version          : ${Jenkins.VERSION}"
-            report << "Root URL         : ${j.rootUrl}"
-            report << "Home             : ${j.rootDir}"
-            report << "System Message   : ${j.systemMessage ?: 'Not Configured'}"
-
-            report << ""
-
-            report << "Jobs             : ${j.items.size()}"
-            report << "Nodes            : ${j.nodes.size()}"
-            report << "Executors        : ${j.numExecutors}"
+            report << "Version          : ${Jenkins.VERSION}\n"
+            report << "Root URL         : ${j.rootUrl}\n"
+            report << "Home             : ${j.rootDir}\n"
+            report << "System Message   : ${j.systemMessage ?: 'Not Configured'}\n"
 
             report << ""
 
-            report << "Quiet Mode       : ${j.isQuietingDown()}"
-            report << "Agent Port       : ${j.slaveAgentPort}"
+            report << "Jobs             : ${j.items.size()}\n"
+            report << "Nodes            : ${j.nodes.size()}\n"
+            report << "Executors        : ${j.numExecutors}\n"
+
+            report << ""
+
+            report << "Quiet Mode       : ${j.isQuietingDown()}\n"
+            report << "Agent Port       : ${j.slaveAgentPort}\n"
 
             report << "======================================="
 
