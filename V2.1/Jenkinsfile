@@ -32,7 +32,7 @@ String buildJobInventoryReport() {
         allJobs.each { job ->
 
             def type = job.class.simpleName
-            def enabled = job.getBuildable() ? "YES" : "NO"
+            def enabled = job.isBuildable() ? "YES" : "NO"
             def lastBuild = job.lastBuild ?
                     "#${job.lastBuild.number}" :
                     "Never"
