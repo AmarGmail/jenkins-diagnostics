@@ -35,6 +35,105 @@ pipeline {
                 '''
             }
         }
+        stage('Internet Connectivity') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "INTERNET CONNECTIVITY"
+                echo "=================================================="
 
+                test_url() {
+                    URL=$1
+
+                    echo
+                    echo "Testing: $URL"
+
+                    curl -Is --max-time 10 "$URL" | head -1 || \
+                        echo "Unable to reach $URL"
+                }
+
+                test_url https://github.com
+                test_url https://api.github.com
+                test_url https://pypi.org
+                test_url https://google.com
+                '''
+            }
+        }
+        stage('DNS Resolution') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "DNS RESOLUTION"
+                echo "=================================================="
+
+                resolve_host() {
+
+                    HOST=$1
+
+                    echo
+                    echo "Resolving $HOST"
+
+                    if command -v getent >/dev/null
+                    then
+                        getent hosts "$HOST"
+                    elif command -v nslookup >/dev/null
+                    then
+                        nslookup "$HOST"
+                    else
+                        echo "No DNS lookup tool installed"
+                    fi
+                }
+
+                resolve_host github.com
+                resolve_host pypi.org
+                resolve_host google.com
+                '''
+            }
+        }
+        stage('Port Connectivity') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "TCP PORT TEST"
+                echo "=================================================="
+
+                test_port() {
+
+                    HOST=$1
+                    PORT=$2
+
+                    echo
+                    echo "$HOST:$PORT"
+
+                    timeout 5 bash -c "</dev/tcp/$HOST/$PORT" \
+                        && echo "OPEN" \
+                        || echo "CLOSED"
+                }
+
+                test_port github.com 443
+                test_port pypi.org 443
+                test_port google.com 443
+                '''
+            }
+        }
+        stage('Network Sockets') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "ACTIVE CONNECTIONS"
+                echo "=================================================="
+
+                if command -v ss >/dev/null
+                then
+                    ss -tuln
+                elif command -v netstat >/dev/null
+                then
+                    netstat -tuln
+                else
+                    echo "Neither ss nor netstat is available."
+                fi
+                '''
+            }
+        }  
     }
 }
