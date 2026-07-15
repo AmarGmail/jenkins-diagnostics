@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Network Configuration') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "NETWORK CONFIGURATION"
+                echo "=================================================="
+
+                echo
+                echo "Hostname"
+                hostname
+
+                echo
+                echo "IP Address(es)"
+                hostname -I || true
+
+                echo
+                echo "Network Interfaces"
+                ip addr || ifconfig || true
+
+                echo
+                echo "Routing Table"
+                ip route || route -n || true
+
+                echo
+                echo "DNS Configuration"
+                cat /etc/resolv.conf
+
+                echo
+                echo "Proxy Environment Variables"
+                env | grep -Ei "proxy" || echo "No proxy configured"
+                '''
+            }
+        }
+
+    }
+}
