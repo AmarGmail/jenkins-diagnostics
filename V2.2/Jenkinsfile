@@ -1,0 +1,56 @@
+import jenkins.model.Jenkins
+
+@NonCPS
+String buildNodeReport() {
+
+    def j = Jenkins.get()
+    def report = new StringBuilder()
+    def computer = Jenkins.get().toComputer()
+
+    report << "Configured Nodes\n"
+    report << "----------------\n"
+
+    j.getNodes().each { node ->
+        report << "Name : ${node.displayName}\n"
+        report << "Class: ${node.class.name}\n"
+    }
+    report << "Jenkins Class          : ${j.class.name}\n\n"
+    report << "Jenkins Controller     : ${j}\n"
+    report << "Total configured nodes : ${j.getNodes().size()}\n"
+    report << "displayName            : ${j.displayName}\n"
+    report << "nodeName               : ${j.nodeName}\n\n"
+    report << "Computer Class         : ${computer.class.name}\n"
+    report << "Computer Name          : ${computer.name}\n"
+    report << "Computer online?       : ${computer.isOnline()}"
+    report << "Computer offline?      : ${computer.isOffline()}"
+    report << "Computer Ideal?        : ${computer.isIdle()}"
+
+    return report.toString()
+}
+
+node {
+
+    try {
+
+        stage('Node Diagnostics') {
+            String report =  buildNodeReport()
+            println report
+            
+            writeFile(
+               file: 'jenkins-node-report.txt',
+                text: report
+            )
+
+            archiveArtifacts(
+                artifacts: 'jenkins-node-report.txt'
+            )
+            
+        }
+    } catch (Exception e) {
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+    } finally {
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+    }
+}
