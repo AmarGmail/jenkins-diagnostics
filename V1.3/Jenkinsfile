@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Installed Tools') {
+            steps {
+                sh '''
+                echo "=================================================="
+                echo "INSTALLED TOOLS"
+                echo "=================================================="
+
+                check_tool() {
+                    TOOL_NAME=$1
+                    VERSION_CMD=$2
+
+                    echo
+                    echo "----------------------------------------"
+                    echo "$TOOL_NAME"
+                    echo "----------------------------------------"
+
+                    if command -v ${VERSION_CMD%% *} >/dev/null 2>&1; then
+                        $VERSION_CMD
+                    else
+                        echo "$TOOL_NAME : NOT INSTALLED"
+                    fi
+                }
+
+                check_tool "Git" "git --version"
+                check_tool "Java" "java -version"
+                check_tool "Python" "python3 --version"
+                check_tool "Pip" "pip3 --version"
+                check_tool "Docker" "docker --version"
+                check_tool "Docker Compose" "docker compose version"
+                check_tool "Maven" "mvn -version"
+                check_tool "Gradle" "gradle -version"
+                check_tool "NodeJS" "node --version"
+                check_tool "NPM" "npm --version"
+                check_tool "Terraform" "terraform version"
+                check_tool "Ansible" "ansible --version"
+                check_tool "Kubectl" "kubectl version --client"
+
+                echo
+                echo "=================================================="
+                '''
+            }
+        }
+
+    }
+}
