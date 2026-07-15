@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+
+    stages{
+        stage('Jenkins Build Infirmation') {
+            steps {
+                script {
+
+                    echo "-----------------------------------------"
+                    echo "        JENKINS BUILD INFORMATION"
+                    echo "-----------------------------------------"
+
+                    echo "Job Name          : ${env.JOB_NAME}"
+                    echo "Job Base Name     : ${env.JOB_BASE_NAME}"
+
+                    echo "Build Number      : ${env.BUILD_NUMBER}"
+                    echo "Build Id          : ${env.BUILD_ID}"
+                    echo "Build URL         : ${env.BUILD_URL}"
+
+                    echo "Workpace          : ${env.WORKSPACE}"
+                    echo "Node              : ${env.NODE}"
+                    echo "Executor          : ${env.EXECUTOR_NUMBER}"
+                    echo "Jenkins URL       : ${env.JENKINS_URL}"
+                }
+            }
+        }
+
+        stage('Operating System Information') {
+            steps {
+
+                sh '''
+                echo "=================================================="
+                echo "           OPERATING SYSTEM"
+                echo "=================================================="
+
+                echo "Hostname"
+                hostname
+
+                echo
+
+                echo "Kernel"
+                uname -a
+
+                echo
+
+                echo "Current User"
+                whoami
+
+                echo
+
+                echo "Current Directory"
+                pwd
+
+                echo
+
+                echo "Operating System"
+                cat /etc/os-release
+
+                echo
+
+                echo "Uptime"
+                uptime
+
+                echo "=================================================="
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Disgnostics Completed"
+        }
+    }
+}
