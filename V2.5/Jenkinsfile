@@ -1,0 +1,101 @@
+import jenkins.model.Jenkins
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Arrays
+
+/*
+ * Uses Jenkins internal APIs.
+ * May require Script Approval.
+ *
+ * Jenkins
+ *   └── Queue
+ *         └── Queue.Item
+ */
+
+@NonCPS
+String buildQueueReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+
+    def queue = j.getQueue()
+    //def items = new ArrayList(queue.getItems())
+    def items = Arrays.asList(queue.getItems())
+
+    report << "============================================================\n"
+    report << "            JENKINS QUEUE DIAGNOSTICS\n"
+    report << "============================================================\n"
+    report << "Queue Class : ${queue.class.name}\n"
+    report << "Queue Size  : ${items.size()}\n\n"
+
+    if (items.isEmpty()) {
+
+        report << "No queued builds.\n"
+
+    } else {
+
+        def sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
+        report << String.format(
+            "%-6s %-28s %-20s %-10s %-10s %-35s\n",
+            "ID",
+            "TASK",
+            "QUEUED SINCE",
+            "BLOCKED",
+            "BUILDABLE",
+            "WHY"
+        )
+
+        report << ("-" * 120) << "\n"
+
+        items.each { item ->
+
+            report << String.format(
+                "%-6s %-28s %-20s %-10s %-10s %-35s\n",
+                item.getId(),
+                item.getTask().getName(),
+                sdf.format(new Date(item.getInQueueSince())),
+                item.isBlocked(),
+                item.isBuildable(),
+                item.getWhy()
+            )
+        }
+
+        report << ("-" * 120) << "\n"
+    }
+
+    return report.toString()
+}
+
+node {
+
+    try {
+
+        stage('Queue Diagnostics') {
+
+            String report = buildQueueReport()
+
+            println report
+
+            writeFile(
+                file: 'jenkins-queue-report.txt',
+                text: report
+            )
+
+            archiveArtifacts(
+                artifacts: 'jenkins-queue-report.txt'
+            )
+        }
+
+    } catch (Exception e) {
+
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+
+    } finally {
+
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+
+    }
+}
