@@ -1,0 +1,78 @@
+import jenkins.model.Jenkins
+
+@NonCPS
+String buildExecutorReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+    def computer = j.toComputer()
+
+    def executors = computer.getExecutors()
+    def executor = executors[0]
+    report << ("=" * 60) << "\n"
+    report << "Node -> Computer -> Executor Diagnostics\n"
+    report << ("=" * 60) << "\n"
+    report << "Computer Executor Class Name: ${computer.class.name}\n"
+    report << "Executor count              : ${executors.size()}\n"
+    report << "Executor Class              : ${executor.class.name}\n"
+    report << ("-" * 60) << "\n\n"
+    
+    executors.each { myExecutor1 ->
+        report << "Executor Number             : ${myExecutor1.getNumber()}\n"
+        report << "Idle?                       : ${myExecutor1.isIdle()}\n"
+        report << "Busy?                       : ${myExecutor1.isBusy()}\n"
+        report << "Current Executable          : ${myExecutor1.getCurrentExecutable()}\n"       
+
+        report << ("-" * 60) << "\n"
+    }
+    
+    report << String.format(
+        "%-8s %-6s %-6s %-40s\n",
+        "EXECUTOR", "BUSY", "IDLE", "EXECUTABLE"        
+    )
+    report << ("-" * 60) << "\n"
+
+    executors.each { myExecutor ->
+        def executable = myExecutor.getCurrentExecutable()
+        report << String.format (
+            "%-8s %-6s %-6s %-40s\n",
+            myExecutor.getNumber(),
+            myExecutor.isBusy() ? "YES" : "NO",
+            myExecutor.isIdle() ? "YES" : "NO",
+            executable ? executable.class.simpleName : "-"
+        )   
+    
+    }
+    
+    //executor.class.method.each {
+    //    println it.name
+    //}
+return report.toString()
+}
+
+node {
+    try {
+        stage('Executor Diagnostics') {
+        
+            String report = buildExecutorReport()
+            println "---Printing the report---"
+            println report
+            println "---end of report--"
+
+            writeFile( 
+                file: 'jenkins-executor-report.txt',
+                text: report
+            )
+            archiveArtifacts (
+                artifacts: 'jenkins-executor-report.txt'
+            )
+        }
+    } catch (Exception e) {
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+    } finally {
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+    }
+    
+}
