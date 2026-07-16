@@ -1,5 +1,8 @@
 import jenkins.model.Jenkins
-
+/*
+ * Uses Jenkins internal APIs.
+ * May require Script Approval.
+ */
 @NonCPS
 String buildExecutorReport() {
 
@@ -16,7 +19,7 @@ String buildExecutorReport() {
     report << "Executor count              : ${executors.size()}\n"
     report << "Executor Class              : ${executor.class.name}\n"
     report << ("-" * 60) << "\n\n"
-    
+    //Redundent but lets print again
     executors.each { myExecutor1 ->
         report << "Executor Number             : ${myExecutor1.getNumber()}\n"
         report << "Idle?                       : ${myExecutor1.isIdle()}\n"
