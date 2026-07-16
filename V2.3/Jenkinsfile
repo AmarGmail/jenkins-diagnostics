@@ -1,0 +1,86 @@
+import jenkins.model.Jenkins
+
+/*
+ * Uses Jenkins internal APIs.
+ * May require Script Approval.
+ */
+
+@NonCPS
+String buildPluginReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+
+    def pm = j.getPluginManager()
+    
+    report << "Plugin Manager Class : ${pm.class.name}\n"
+
+    // Create a mutable copy before sorting.
+    // PluginManager may return a list that should not be modified directly.
+    def plugins = new ArrayList(pm.getPlugins()).sort { it.getShortName() }  
+    def firstPlugin = plugins[0]
+    report << "Class wrapper        : ${firstPlugin.class.name}\n"
+
+    report << '==============================================\n'
+    report << "JENKINS PLUGINS DIAGNOSTICS\n"
+    report << "==============================================\n"
+    report << ("-" * 90) << "\n"
+    report << String.format("%-40s %-30s %-8s %-8s\n",
+                "PLUGIN SHORT NAME", "VERSION", "ENABLED", "ACTIVE")
+    report << ("-" * 90) << "\n"
+    
+    int enabledCount = 0
+    int activeCount = 0
+    plugins.each { plugin ->
+
+        if (plugin.isEnabled()) {
+            enabledCount++
+        }
+
+        if (plugin.isActive()) {
+            activeCount++
+        }
+        report << String.format("%-40s %-30s %-8s %-8s\n",
+            plugin.getShortName(),
+            plugin.getVersion(),
+            plugin.isEnabled(),
+            plugin.isActive()
+        )
+    }
+
+    report << ("-" * 90) << "\n"
+    report << "Total Plugins        : ${plugins.size()}\n"
+    report << "Enabled Plugins      : ${enabledCount}\n"
+    report << "Active count         : ${activeCount}\n"
+    report << "Disabled count       : ${plugins.size() - enabledCount}"
+
+    return report.toString()
+}
+
+
+node {
+
+    try {
+
+        stage('Plugin Diagnostics') {
+            String report = buildPluginReport()
+            println report
+
+            writeFile(
+                file: 'jenkins-plugin-report.txt',
+                text: report
+            )
+
+            archiveArtifacts(
+                artifacts: 'jenkins-plugin-report.txt'
+            )
+        }
+
+    } catch (Exception e) {
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+    } finally {
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+    }
+}

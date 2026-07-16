@@ -12,7 +12,7 @@ String buildNodeReport() {
     StringBuilder report = new StringBuilder()
     def computer = j.toComputer()
 
-    report << "-------------------------------------\n"
+    report << '-------------------------------------\n'
     report << "JENKINS NODE DIAGNOSTICS\n"
     report << "-------------------------------------\n"
 

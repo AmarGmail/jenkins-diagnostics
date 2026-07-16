@@ -1,0 +1,57 @@
+import jenkins.model.Jenkins
+
+@NonCPS
+def buildPluginReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+
+    //j.pluginManager or j.getPluginManager()
+    def pm = j.getPluginManager()
+        report << "Plugin Manager Class: ${pm.class.name}\n"
+        report << "Total Plugins: ${pm.getPlugins().size()}\n"
+
+    def plugins = pm.getPlugins().sort { it.getShortName() }
+    def firstplugin = plugins[0]
+    report << "Class wrapper      : ${firstplugin.class.name}\n\n"
+
+        plugins.each { plugin ->
+            report << plugin.getShortName() 
+            report << plugin.getDisplayName()
+            report << plugin.getVersion()
+            report << plugin.isEnabled()
+            report << plugin.isActive() << "\n"
+        }
+
+    return report.toString()
+}
+
+
+node {
+
+    try {
+  
+        stage('Plugin Diagnostics') {
+            String report = buildPluginReport()
+            println report
+        
+
+            writeFile(
+                file: 'jenkins-plugin-report.txt',
+                text: report
+            )
+
+            archiveArtifacts(
+                artifacts: 'jenkins-plugin-report.txt'
+            )
+        }
+
+    } catch (Exception e) {
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+    } finally {
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+    }
+
+}
