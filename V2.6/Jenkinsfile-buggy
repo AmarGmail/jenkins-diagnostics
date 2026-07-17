@@ -1,0 +1,147 @@
+import jenkins.model.Jenkins
+import hudson.model.Job
+/* Job
+    │
+    ├── getLastBuild()
+    ├── getLastSuccessfulBuild()
+    ├── getLastFailedBuild()
+    ├── getBuilds()
+    └── getBuildByNumber()
+*/
+
+@NonCPS
+String buildHistoryReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+
+    //def jobs = j.allItems(Job.class) as List
+    //ERROR: No signature of method: hudson.model.Hudson.getLastBuild() is applicable for argument types: () values: []
+    //def jobs = j.allItems(Job.class).findAll { it != j } as List
+    def jobs = j.allItems(Job.class)
+                .findAll { !(it instanceof Jenkins) } as List
+
+    def separator = "=" * 60
+    report << ${separator} << "\n"
+    report << "Total Jobs : ${jobs.size()}\n"
+    report << ${separator} << "\n\n"
+
+    if (jobs.isEmpty()) {                     
+        report << "No jobs found\n"
+        return report.toString()
+    }
+
+    jobs.each { job ->
+
+    //for (def job in jobs) {
+        
+
+        try {
+            report << ${separator} << "\n"
+            report << "Job Name             : ${job.fullName}\n"
+            report << "Job Class            : ${job.class.name}\n"
+            report << ${separator} << "\n"
+
+            //Last Build check
+            def LastBuild = job.getLastBuild()
+            if (lastBuild == null) {
+                report << "Never been build \n"
+                return
+            }
+            report << "  Last Build #       : ${lastBuild.getNumber()}\n"
+            report << "  Last Build Result  : ${lastBuild.getResult()}\n"
+            report << "  Last Build Duration: ${lastBuild.getDuration()}ms\n"
+            report << "  Last Build Running?: ${lastBuild.isBuilding()}\n"
+            report << "  Timestamp          : ${lastBuild.getTimestamp().getTime()}\n\n"
+
+            //Last Successful Build
+            def lastSuccess = job.getLastSuccessfulBuild()
+            report << "  Last Success #     : ${lastSuccess?.getNumber() ?: 'Never succeeded'}\n\n"
+
+            /*def lastSuccess = job.getLastSuccessfulBuild()
+            if (lastSuccess != null) {
+                report << "Last Success Number      : ${lastSuccess.getNumber()}\n"
+                report << "Last Success Time        : ${lastSuccess.getTimestamp().getTime()}\n\n"
+            } else {
+                report << "Last Success Number      : Never Successded\n\n"
+            }*/
+            
+            //Last failed job
+            def lastFailed = job.getLastFailedBuild()
+            report << "  Last Failed #      : ${lastFailed?.getNumber() ?: 'Never failed'}\n\n"
+
+            /*def lastFailed = job.getLastFailedBuild()
+            if (lastFailed != null ) {
+                report << "Last Failed Number       : ${lastFailed.getNumber()}\n"
+                report << "Last Failed Time         : ${lastFailed.getTimestamp().getTime()}\n\n"
+            } else {
+                report << "Last Failed Number        : Never failed \n"
+            }*/
+
+            // Get all Builds history
+            def builds = job.getBuilds() as List
+            report << "Total Builds         : ${builds.size()}\n"
+            report << "Build History        :\n"
+            builds.each { build ->
+                report << String.format("   #%-5s %-10s %sms\n",
+                    build.getNumber(),
+                    build.getResult() ?: 'RUNNING',
+                    build.getDuration()
+                )
+            }
+            report << "\n"
+        } catch (Exception e) {
+            report << "Error Processing job: ${e.message}\n\n"
+        }
+
+    }
+
+    
+
+    //def job = jobs[0]
+
+    //report << "Job Class Name       : ${job.class.name}\n"
+    
+    /* def workflowRun = job.getLastBuild()
+    if (workflowRun == null) {                 
+        report << "Job has never been built\n"
+        return report.toString()
+    }
+
+    report << "Last Build Class     : ${workflowRun.class.name}\n"
+    report << "Last Build Number    : ${workflowRun.getNumber()}\n"
+    report << "Last Build Result    : ${workflowRun.getResult()}\n"
+    report << "Last Build Duration  : ${workflowRun.getDurationString()}\n"
+    report << "Last Build Name      : ${workflowRun.getFullDisplayName()}\n"
+    report << "Last Build Running?  : ${workflowRun.isBuilding()}\n"
+    report << "Timestamp            : ${workflowRun.getTimestamp().getTime()}\n"
+    */
+    return report.toString()
+}
+
+node {
+    try {
+        stage('Build History Diagnostics') {
+            String report = buildHistoryReport()
+            println report
+
+            writeFile(
+                file: 'jenkins-history-report.txt',
+                text: report
+            )
+            archiveArtifacts(
+                artifacts: 'jenkins-history-report.txt'
+            )
+            
+        }
+
+    } catch (Exception e){
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+
+    } finally {
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+
+    }
+}

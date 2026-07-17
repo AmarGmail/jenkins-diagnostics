@@ -1,0 +1,94 @@
+import jenkins.model.Jenkins
+import hudson.model.Job
+
+@NonCPS
+String buildHistoryReport() {
+
+    Jenkins j = Jenkins.get()
+    StringBuilder report = new StringBuilder()
+    def separator = "=" * 60                              // ← fix Bug 1
+
+    def jobs = j.allItems(Job.class)
+                .findAll { !(it instanceof Jenkins) } as List
+
+    report << "${separator}\n"
+    report << "Jenkins Build History\n"
+    //report << "${separator}\n"
+    report << "Total Jobs : ${jobs.size()}\n"
+    report << "${separator}\n\n"
+
+    if (jobs.isEmpty()) {
+        report << "No jobs found\n"
+        return report.toString()
+    }
+
+    for (def job in jobs) {                               // ← fix Bug 2
+        try {
+            report << "${separator}\n"
+            report << "Job Name             : ${job.fullName}\n"
+            report << "Job Class            : ${job.class.name}\n"
+            report << "${separator}\n"
+
+            def lastBuild = job.getLastBuild()
+            if (lastBuild == null) {
+                report << "  Never been built\n\n"
+                continue                                  // ← use continue not return in for loop
+            }
+
+            report << "  Last Build #       : ${lastBuild.getNumber()}\n"
+            report << "  Last Build Result  : ${lastBuild.getResult()}\n"
+            report << "  Last Build Duration: ${lastBuild.getDuration()}ms\n"
+            report << "  Last Build Running?: ${lastBuild.isBuilding()}\n"
+            report << "  Timestamp          : ${lastBuild.getTimestamp().getTime()}\n\n"
+
+            def lastSuccess = job.getLastSuccessfulBuild()
+            report << "  Last Success #     : ${lastSuccess?.getNumber() ?: 'Never succeeded'}\n\n"
+
+            def lastFailed = job.getLastFailedBuild()
+            report << "  Last Failed #      : ${lastFailed?.getNumber() ?: 'Never failed'}\n\n"
+
+            def builds = job.getBuilds() as List
+            report << "  Total Builds       : ${builds.size()}\n"
+            report << "  Build History      :\n"
+
+            for (def build in builds) {                  // ← for loop here too
+                report << String.format("    #%-5s %-10s %sms\n",
+                    build.getNumber(),
+                    build.getResult() ?: 'RUNNING',
+                    build.getDuration()
+                )
+            }
+            report << "\n"
+
+        } catch (Exception e) {
+            report << "  Error Processing job: ${e.message}\n\n"
+        }
+    }
+
+    return report.toString()
+}
+
+node {
+    try {
+        stage('Build History Diagnostics') {
+            String report = buildHistoryReport()
+            println report
+
+            writeFile(
+                file: 'jenkins-history-report.txt',
+                text: report
+            )
+            archiveArtifacts(
+                artifacts: 'jenkins-history-report.txt'
+            )
+        }
+
+    } catch (Exception e) {
+        currentBuild.result = "FAILURE"
+        echo "ERROR: ${e.message}"
+        throw e
+
+    } finally {
+        echo "Pipeline Completed: ${currentBuild.currentResult}"
+    }
+}
